@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
-
+const MIN_DECIBELS = -45;
+const FFT_SIZE = 512;
+const SILENCE_TO_STOP = 2000;
+const MINIMUM_NOISE = 700;
 function App() {
 	const noiseDotRef = useRef<HTMLDivElement | null>(null);
 	const isRecording = useRef(false);
 	const [recordings, setRecordings] = useState<{ url: string; noiseScore: number }[]>([]);
 
-	function convertToPercentage(value: number) {
+	const convertToPercentage = (value: number) => {
 		const oldMax = 255;
 		const oldMin = 0;
 		const newMax = 100;
@@ -15,7 +18,7 @@ function App() {
 		const newRange = newMax - newMin;
 		const newValue = ((value - oldMin) * newRange) / oldRange + newMin;
 		return Math.min(Math.max(newValue, newMin), newMax);
-	}
+	};
 
 	const getNoiseScore = useCallback((noiseRates: number[]) => {
 		const averages = [];
@@ -50,8 +53,8 @@ function App() {
 				audioCtx = new AudioContext({ sampleRate: 48000 });
 				const source = audioCtx.createMediaStreamSource(stream);
 				analyzer = audioCtx.createAnalyser();
-				analyzer.fftSize = 512;
-				analyzer.minDecibels = -45;
+				analyzer.fftSize = FFT_SIZE;
+				analyzer.minDecibels = MIN_DECIBELS;
 				source.connect(analyzer);
 				const frequencyData = new Uint8Array(analyzer.frequencyBinCount);
 				let lastNoiseAt = Date.now();
@@ -99,9 +102,10 @@ function App() {
 					const currentTimeStamp = Date.now();
 					analyzer.getByteFrequencyData(frequencyData);
 					const maxDecibels = Math.max(...frequencyData);
+					// console.log(audioCtx);
 					if (maxDecibels > 0) {
 						lastNoiseAt = currentTimeStamp;
-						console.log(maxDecibels);
+						// console.log(maxDecibels);
 						if (!isRecording.current) {
 							isRecording.current = true;
 							startRecording();
@@ -110,10 +114,10 @@ function App() {
 						}
 						noiseRates.push(maxDecibels);
 					} else {
-						if (currentTimeStamp - lastNoiseAt >= 2000 && isRecording.current) {
+						if (currentTimeStamp - lastNoiseAt >= SILENCE_TO_STOP && isRecording.current) {
 							isRecording.current = false;
 							updateStatus();
-							if (currentTimeStamp - recordingStartedAt < 2700) {
+							if (currentTimeStamp - recordingStartedAt < SILENCE_TO_STOP + MINIMUM_NOISE) {
 								stopRecording();
 								isEligibleForSaving = false;
 								console.log("Discarded:", currentTimeStamp - recordingStartedAt);
@@ -145,16 +149,45 @@ function App() {
 		return `rgb(${red}, ${green}, 0)`;
 	};
 	return (
-		<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-			<h1>Noise Detector</h1>
-			<div ref={noiseDotRef} style={{ width: "100px", height: "100px", borderRadius: "50%", backgroundColor: "green" }}></div>
-			<h5>Recordings</h5>
-			<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-				{recordings.map((recording, i) => (
-					<audio controls key={i} style={{ backgroundColor: getColor(recording.noiseScore), borderRadius: "30px" }}>
-						<source src={recording.url} />
-					</audio>
-				))}
+		<div style={{ display: "flex", height: "100%" }}>
+			<div style={{ width: "50%", border: "1px solid white", padding: "8px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+				<div>
+					<h4>Configuration Variables</h4>
+					<p>Min Decibels : {MIN_DECIBELS}</p>
+					<p>FFT Size : {FFT_SIZE}</p>
+					<p>Silence to Stop : {SILENCE_TO_STOP}</p>
+					<p>Minimum Noise : {MINIMUM_NOISE}</p>
+				</div>
+				<div>
+					<h4>Instructions to use:</h4>
+					<p>Give access to microphone in the browser after opening this for the first time.</p>
+					<p>Then you can just start making noise, and if that noise matches "Eligibility Criteria", it will be recorded.</p>
+					<h5>Eligibility Criteria:</h5>
+					<p>
+						we start recording when we hear any noise. we keep recording until we observe <strong>[Silence to Stop]</strong> ms of complete silence. after that we will check the recording
+						is longer than
+						<strong>[Silence to Stop]+[Minimum Noise]</strong> ms, if it longer than that only, we will save the recording otherwise we will discard it inorder to not to bloat the test
+						analytics.
+					</p>
+					<p>
+						<strong>[Min Decibels]</strong> can be considered as sentivity. the lower the number, the more sensitive the microphone will be.
+					</p>
+					<p>
+						<strong>[FFT Size]</strong> is "Fast Fourier Transform" window size. The Heigher the size, higher the frequency details but it also the processing time.
+					</p>
+				</div>
+			</div>
+			<div style={{ width: "50%", display: "flex", border: "1px solid white", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "16px" }}>
+				<h1>Noise Detector</h1>
+				<div ref={noiseDotRef} style={{ width: "100px", height: "100px", borderRadius: "50%", backgroundColor: "green" }}></div>
+				<h5>Recordings</h5>
+				<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+					{recordings.map((recording, i) => (
+						<audio controls key={i} style={{ backgroundColor: getColor(recording.noiseScore), borderRadius: "30px" }}>
+							<source src={recording.url} />
+						</audio>
+					))}
+				</div>
 			</div>
 		</div>
 	);
