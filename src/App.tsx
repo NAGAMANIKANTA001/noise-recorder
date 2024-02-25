@@ -175,6 +175,11 @@ function App() {
 					<p>
 						<strong>[FFT Size]</strong> is "Fast Fourier Transform" window size. The Heigher the size, higher the frequency details but it also the processing time.
 					</p>
+					<h5>Noise level:</h5>
+					<p>
+						Based on the noise level, we are giving a score from 0 to 100, 0 is the quietest and 100 is the loudest. In our POC, if the noise level is near to 100 the recordings will be in
+						red color, they'll get more greener color as the noise level decreases.
+					</p>
 				</div>
 			</div>
 			<div style={{ width: "50%", display: "flex", border: "1px solid white", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "16px" }}>
