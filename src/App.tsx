@@ -161,13 +161,14 @@ function App() {
 				<div>
 					<h4>Instructions to use:</h4>
 					<p>Give access to microphone in the browser after opening this for the first time.</p>
-					<p>Then you can just start making noise, and if that noise matches "Eligibility Criteria", it will be recorded.</p>
+					<p>
+						Then you can just start making noise, and if that noise matches "Eligibility Criteria", it will be recorded. WE DO NOT UPLOAD THE AUDIO RECORDINGS ANYWHERE. IN FACT, YOU CAN
+						EVEN TURN THE INTERNET OFF ONCE THIS PAGE LOADS, AND EVERYTHING SHOULD WORK AS-IS 😊
+					</p>
 					<h5>Eligibility Criteria:</h5>
 					<p>
-						we start recording when we hear any noise. we keep recording until we observe <strong>[Silence to Stop]</strong> ms of complete silence. after that we will check the recording
-						is longer than
-						<strong>[Silence to Stop]+[Minimum Noise]</strong> ms, if it longer than that only, we will save the recording otherwise we will discard it inorder to not to bloat the test
-						analytics.
+						We start recording when we detect any noise, and continue recording until we observe [Selence to Stop] ms of complete silence. After that, only if the recording is longer than
+						([Silence to Stop]+[Minimum Noise]) ms, do we save the recording otherwise. Else, we discard it as we deem it to be insignificant
 					</p>
 					<p>
 						<strong>[Min Decibels]</strong> can be considered as sentivity. the lower the number, the more sensitive the microphone will be.
@@ -177,8 +178,8 @@ function App() {
 					</p>
 					<h5>Noise level:</h5>
 					<p>
-						Based on the noise level, we are giving a score from 0 to 100, 0 is the quietest and 100 is the loudest. In our POC, if the noise level is near to 100 the recordings will be in
-						red color, they'll get more greener color as the noise level decreases.
+						Based on the noise level, we assign a score from 0 to 100: 0 is the quietest and 100 is the loudest. You can try recording a soft voice and then progressively record a louder
+						voice and the audio playback element should get redder.
 					</p>
 				</div>
 			</div>
